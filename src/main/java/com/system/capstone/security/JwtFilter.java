@@ -14,6 +14,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 
 import java.io.IOException;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +41,9 @@ public class JwtFilter extends OncePerRequestFilter {
             logger.info("🔐 Extracted Token: {}", token);
 
             String username = jwtUtil.extractUsername(token);
+            List<String> roles = jwtUtil.extractRoles(token);
             logger.info("👤 Extracted Username: {}", username);
+            logger.info("👤 Extracted Role: {}", roles.get(0));
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userService.loadUserByUsername(username);

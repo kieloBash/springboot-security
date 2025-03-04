@@ -28,8 +28,11 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**","/api/**").permitAll()
-                        .anyRequest().authenticated() // Secure all other endpoints
+                        .requestMatchers("/auth/**").permitAll()  // Permit these paths to be accessed by anyone
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")  // Only accessible by users with "ADMIN" role
+                        .requestMatchers("/api/user/**").hasRole("USER")  // Only accessible by users with "USER" role
+                        .requestMatchers("/api/any/**").hasAnyRole("USER","ADMIN")
+                        .anyRequest().authenticated()  // Secure all other endpoints
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -40,7 +43,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://127.0.0.1:5500")); // Allow frontend
+        config.setAllowedOrigins(List.of("*")); // Allow frontend
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setAllowCredentials(true);

@@ -10,22 +10,17 @@ import com.system.capstone.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @RestController
-@RequestMapping("/auth")
 public class AuthController {
     private static final Logger logger = LoggerFactory.getLogger(JwtFilter.class);
     private final UserService userService;
@@ -37,10 +32,10 @@ public class AuthController {
         this.jwtUtil = jwtUtil;
     }
 
-    @PostMapping("/register")
+    @PostMapping("/auth/register")
     public ResponseEntity<?> register(@Valid @RequestBody User user){
         try{
-            User registeredUser = userService.registerUser(user.getUsername(),user.getEmail(), user.getPassword());
+            User registeredUser = userService.registerUser(user);
 
             return ResponseEntity.ok(
                     new ResponseDTO<User>("Registered User!",HttpStatus.CREATED,registeredUser)
@@ -55,7 +50,7 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/login")
+    @PostMapping("/auth/login")
     public ResponseEntity<?> login(@RequestBody User user) {
         try{
             User loggedInUser = this.userService.loginUser(user);
@@ -81,4 +76,39 @@ public class AuthController {
         }
     }
 
+
+    @GetMapping("/api/admin/users")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getAllUsersADMIN(){
+        try{
+            List<User> userList = this.userService.getAllUsers();
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(new ResponseDTO<List<User>>(
+                            "Successfully fetched list of users",
+                            HttpStatus.OK,
+                            userList
+                    ));
+        }catch (RuntimeException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseDTO<>(e.getMessage(),HttpStatus.BAD_REQUEST,null));
+        }
+    }
+
+    @GetMapping("/api/user/users")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> getAllUsersUSER(){
+        try{
+            List<User> userList = this.userService.getAllUsers();
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(new ResponseDTO<List<User>>(
+                            "Successfully fetched list of users",
+                            HttpStatus.OK,
+                            userList
+                    ));
+        }
+        catch (RuntimeException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseDTO<>(e.getMessage(),HttpStatus.BAD_REQUEST,null));
+        }
+    }
 }

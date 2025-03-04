@@ -19,7 +19,7 @@ public class JwtUtil {
 
     public String generateToken(String username, String role) {
         ArrayList<String> roles = new ArrayList<>();
-        roles.add(role);
+        roles.add("ROLE_" + role);
 
         return Jwts.builder()
                 .setSubject(username)
@@ -32,6 +32,10 @@ public class JwtUtil {
 
     public String extractUsername(String token){
         return getClaims(token).getSubject();
+    }
+
+    public List<String> extractRoles(String token) {
+        return getClaims(token).get("roles", List.class); // Extract the roles as List
     }
 
     public boolean validateToken(String token, String username) {

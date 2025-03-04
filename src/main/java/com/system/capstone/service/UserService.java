@@ -12,10 +12,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -29,20 +26,14 @@ public class UserService implements UserDetailsService {
         this.jwtUtil = jwtUtil;
     }
 
-    public User registerUser(String username, String email, String password) {
-        if (userRepository.findByUsername(username).isPresent()) {
+    public User registerUser(User user) {
+        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             throw new UserNotFoundException("Username already exists");
         }
-        if (userRepository.findByEmail(email).isPresent()) {
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new UserNotFoundException("Email already exists");
         }
-
-        User user = new User();
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(password));
-        user.setRole("ADMIN");
-
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
@@ -75,7 +66,11 @@ public class UserService implements UserDetailsService {
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())
                 .password(user.getPassword())
-                .roles("ADMIN") // You can replace this with actual roles from DB later
+                .roles(user.getRole()) // You can replace this with actual roles from DB later
                 .build();
+    }
+
+    public List<User> getAllUsers(){
+        return this.userRepository.findAll();
     }
 }
